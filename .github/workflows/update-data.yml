@@ -18,9 +18,13 @@ jobs:
 
       - name: Baixar Excel do OneDrive
         run: |
-          curl -L \
-            "https://1drv.ms/x/c/64f878910e94b3b2/IQCn7832oyzXQ5YO5ZkS1zYIAaIqvaXaU28Ah_Dk1ZTQdSI?e=sO7UCM&download=1" \
+          SHARE_ID="u!aHR0cHM6Ly8xZHJ2Lm1zL3gvYy82NGY4Nzg5MTBlOTRiM2IyL0lRQ243ODMyb3l6WFE1WU81WmtTMXpZSUFhSXF2YVhhVTI4QWhfRGsxWlRRZFNJP2U9eVJwTTJI"
+
+          curl -fL \
+            "https://api.onedrive.com/v1.0/shares/${SHARE_ID}/root/content" \
             -o "Monitoramento Anual - 2026.xlsx"
+
+          file "Monitoramento Anual - 2026.xlsx"
 
       - name: Preparar Python
         uses: actions/setup-python@v5
@@ -37,6 +41,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
           git add data.json
 
           if git diff --cached --quiet; then
