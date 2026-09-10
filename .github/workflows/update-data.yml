@@ -17,14 +17,43 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Baixar Excel do OneDrive
+        env:
+          SOURCE_URL: ${{ secrets.ONLINE_EXCEL_URL }}
         run: |
-          SHARE_ID="u!aHR0cHM6Ly8xZHJ2Lm1zL3gvYy82NGY4Nzg5MTBlOTRiM2IyL0lRQ243ODMyb3l6WFE1WU81WmtTMXpZSUFhSXF2YVhhVTI4QWhfRGsxWlRRZFNJP2U9eVJwTTJI"
+          set -e
 
-          curl -fL \
-            "https://api.onedrive.com/v1.0/shares/${SHARE_ID}/root/content" \
+          if [ -z "$SOURCE_URL" ]; then
+            echo "ERRO: Secret ONLINE_EXCEL_URL não configurado."
+            exit 1
+          fi
+
+          echo "Obtendo arquivo do OneDrive..."
+
+          curl -L \
+            --fail \
+            --retry 3 \
+            --retry-delay 2 \
+            -H "User-Agent: Mozilla/5.0" \
+            "$SOURCE_URL" \
             -o "Monitoramento Anual - 2026.xlsx"
 
+          echo "Arquivo recebido:"
           file "Monitoramento Anual - 2026.xlsx"
+          ls -lh "Monitoramento Anual - 2026.xlsx"
+
+          # Verifica se realmente é um XLSX válido
+          python - <<'PY'
+          import zipfile
+
+          arquivo = "Monitoramento Anual - 2026.xlsx"
+
+          if not zipfile.is_zipfile(arquivo):
+              print("ERRO: o OneDrive não entregou um arquivo XLSX válido.")
+              print("O conteúdo recebido provavelmente é uma página de compartilhamento.")
+              raise SystemExit(1)
+
+          print("OK: arquivo XLSX válido.")
+          PY
 
       - name: Preparar Python
         uses: actions/setup-python@v5
